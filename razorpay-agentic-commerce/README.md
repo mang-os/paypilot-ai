@@ -1,5 +1,8 @@
 # Agentic Commerce API
 
+> Historical implementation guide. Validation statements below describe earlier development runs, not a fresh verification of the current commit. See the [project overview](../README.md) and [current verification guide](../docs/verification.md) for scope and commands.
+
+
 **Razorpay Buildathon Track 01 — AI Growth & Agentic Commerce**
 
 A machine-readable commerce interface that lets an external AI buyer agent discover
@@ -99,9 +102,7 @@ python -m scripts.demo_buyer_agent --scenario razorpay_timeout   # failure 3 - r
 Then open the dashboard and look at **Agent Trace** for the checkout_id each script prints,
 and **Failure Monitor** after running the failure scenarios.
 
-Run `pytest` from `backend/` for the automated suite (11 tests covering auth, pricing
-authority, the golden path, all three failure scenarios, transaction-limit enforcement,
-suspended-agent rejection, and LLM anti-hallucination).
+Run `pytest` from `backend/` for the automated suite. The checked-in tests cover authentication, pricing, checkout retries, policy rejection, simulated timeout recovery and catalog-result constraints. Obtain the current test count and result from the run output.
 
 ---
 
@@ -130,13 +131,7 @@ Policy Engine checks both — a test (`test_transaction_limit_exceeded_is_a_poli
 specifically proves a mandate can authorize more than the agent's own registry limit allows,
 and the registry limit still wins.
 
-**Inventory uses reserve -> commit/release, not a straight decrement.** Stock moves from
-`quantity_available` to `reserved_quantity` only once policy passes and a Razorpay order is
-about to be created — never earlier (an abandoned checkout shouldn't lock stock) and never
-later (payment shouldn't be attempted against stock that might already be gone). A verified
-`payment.captured` webhook clears the reservation permanently; a timeout or `payment.failed`
-releases it back to `quantity_available`. Verified directly: after a simulated timeout and
-successful retry, inventory counts came back exactly right with no leakage.
+**Inventory reservation and release.** After policy checks pass, checkout completion moves stock from `quantity_available` to `reserved_quantity` before Razorpay order creation. Captured webhook handling clears reserved stock; timeout and payment-failure handlers release it. These are separate database commits, and the current code does not establish atomic inventory/mandate consumption under concurrent checkout completion. Treat this as a demo implementation rather than a concurrency guarantee.
 
 **A retryable failure has to actually be retryable.** This one came from a real bug I found
 by testing, not by inspection: the first version of the Razorpay-timeout handler marked the

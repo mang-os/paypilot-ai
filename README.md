@@ -1,728 +1,100 @@
 # PayPilot AI
 
-### AI-to-AI Commerce with Deterministic Financial Controls
-
-PayPilot AI is an agentic commerce system where a **Buyer AI Agent can autonomously discover products, select an eligible option, apply offers, create a checkout, and transact with a Merchant Agent**.
-
-The key idea is simple:
-
-> **AI can decide what to buy, but it should not have unrestricted control over money.**
-
-Every purchase must pass deterministic financial controls such as merchant policy validation, delegated spending authority, inventory validation, and payment verification before Razorpay is allowed to execute the payment.
-
----
-
-## Problem
-
-AI agents are becoming capable of searching, comparing, and purchasing products on behalf of users.
-
-But autonomous commerce creates a major trust problem:
-
-> If an AI decides to buy something, should it also be allowed to directly move money?
-
-Giving an LLM unrestricted financial authority can lead to:
-
-- Overspending
-- Unauthorized purchases
-- Policy violations
-- Invalid transactions
-- Inventory inconsistencies
-- Unverified payments
-- Poor auditability
-
-PayPilot AI solves this by separating **AI decision-making** from **financial execution**.
-
-```text
-AI DECISION MAKING
-        ↓
-DETERMINISTIC FINANCIAL CONTROLS
-        ↓
-RAZORPAY PAYMENT EXECUTION
-```
-
-## Solution
-
-The user provides a high-level purchasing intent such as:
-
-> Find and buy 2 ANC earbuds under ₹6,000.
-
-From there, the Buyer Agent can autonomously:
-
-- Understand the intent
-- Search the merchant catalog
-- Evaluate matching products
-- Select an eligible product
-- Apply available offers
-- Construct the cart
-- Create the checkout
-- Request transaction execution
-
-Before any payment is allowed, the transaction must pass:
-
-- Merchant policy validation
-- Delegated spending authority validation
-- Inventory validation
-
-Only after these controls succeed can Razorpay be invoked.
-
-## How It Works
-
-```text
-Human Intent
-     ↓
-Buyer Agent
-     ↓
-Merchant Agent
-     ↓
-Product Discovery
-     ↓
-Product Selection
-     ↓
-Offer Application
-     ↓
-Checkout Creation
-     ↓
-Policy Validation
-     ↓
-Spending Authority Validation
-     ↓
-Inventory Reservation
-     ↓
-Razorpay
-     ↓
-Webhook Verification
-     ↓
-Audit Trail
-     ↓
-Purchase Complete
-```
-
-## Core Features
-
-### AI-to-AI Commerce
-
-PayPilot AI is built around interaction between a Buyer Agent and a Merchant Agent.
-
-Instead of manually browsing an ecommerce store, the user provides the purchasing intent while the agents handle the commerce workflow.
-
-### Autonomous Product Discovery
-
-The Buyer Agent searches the merchant catalog using constraints such as:
-
-- Product type
-- Budget
-- Quantity
-- Product attributes
-- Availability
-
-The agent evaluates matching products and selects an eligible option.
-
-### Deterministic Financial Controls
-
-The most important architectural rule in PayPilot AI is:
-
-> LLMs reason about commerce. Deterministic systems control money.
-
-The AI can:
-
-- Understand intent
-- Search products
-- Compare candidates
-- Select tools
-- Choose products
-- Apply offers
-- Orchestrate checkout
-
-The AI cannot:
-
-- Override merchant policy
-- Bypass spending limits
-- Bypass inventory checks
-- Mark a payment as verified
-- Force payment execution
-
-### Delegated Spending Authority
-
-Buyer Agents operate within explicit spending limits.
-
-Example:
-
-```text
-Authorized Limit:  ₹5,000
-Purchase Amount:   ₹5,307.88
-```
-
-Result:
-
-```text
-Spending Authority    REJECTED
-Inventory              NOT RESERVED
-Razorpay               NOT INVOKED
-Payment                NOT ATTEMPTED
-Money Moved            ₹0
-```
-
-This ensures that an AI agent cannot spend beyond the authority delegated to it.
-
-### Merchant Policy Engine
-
-Merchant-side purchase rules are evaluated using deterministic backend logic.
-
-```text
-AI requests transaction
-        ↓
-Policy Engine
-        ↓
-APPROVED / REJECTED
-```
-
-The AI cannot override the result.
-
-### Inventory Protection
-
-Inventory is validated before payment execution.
-
-A rejected transaction does not reserve inventory, and payment cannot continue when inventory requirements are not satisfied.
-
-### Razorpay Integration
-
-Razorpay acts as the payment execution layer.
-
-```text
-Buyer Agent
-    ↓
-Merchant Agent
-    ↓
-Policy Check
-    ↓
-Spending Authority Check
-    ↓
-Inventory Check
-    ↓
-Razorpay Order
-    ↓
-Payment
-    ↓
-Webhook Verification
-```
-
-The current project uses Razorpay Test Mode.
-
-### Webhook Verification
-
-A transaction is not marked complete simply because a Razorpay order was created.
-
-PayPilot verifies payment/webhook evidence before the checkout is considered successfully completed.
-
-### Audit Trail
-
-Important transaction events are recorded as structured evidence.
-
-Example:
-
-```text
-REQUEST_RECEIVED
-PRODUCT_SEARCH
-PRODUCT_SELECTED
-CHECKOUT_CREATED
-POLICY_APPROVED
-MANDATE_VALIDATED
-INVENTORY_RESERVED
-RAZORPAY_ORDER_CREATED
-PAYMENT_VERIFIED
-ORDER_COMPLETED
-```
-
-This gives merchants visibility into:
-
-- What the Buyer Agent requested
-- Which product was selected
-- Which offer was applied
-- Which controls were executed
-- Why a transaction was approved or rejected
-- Whether Razorpay was invoked
-- Whether payment was verified
-
-## Buyer Commerce
-
-The Buyer interface is intent-driven.
-
-The user gives a request such as:
-
-> Find and buy 2 ANC earbuds under ₹6,000.
-
-The UI then displays the real transaction progress:
-
-```text
-Intent
-  ↓
-Discovery
-  ↓
-Selection
-  ↓
-Cart
-  ↓
-Checks
-  ↓
-Razorpay
-  ↓
-Complete
-```
-
-The progress rail is driven by actual checkout and audit evidence.
-
-If a financial control fails:
-
-```text
-Intent       ✓
-Discovery    ✓
-Selection    ✓
-Cart         ✓
-Checks       ✕
-Razorpay     ○
-Complete     ○
-```
-
-Execution stops before payment.
-
-## Merchant Control
-
-Merchant Control provides the merchant-side view of the same transaction.
-
-It includes:
-
-- Overview
-- Execution
-- Audit Trail
-- Safety
-
-### Execution View
-
-Transactions are presented across three layers:
-
-```text
-AI DECISION
-FINANCIAL CONTROL
-PAYMENT
-```
-
-Example:
-
-```text
-AI DECISION
-
-Product Selected      AeroBuds Pro
-Offer Applied         WELCOME10
-Cart Created          ₹5,307.88
-
-FINANCIAL CONTROL
-
-Policy                APPROVED
-Spending Authority    ₹5,307.88 / ₹6,000 (VALIDATED)
-Inventory             RESERVED
-
-PAYMENT
-
-Razorpay Order        CREATED
-Webhook               VERIFIED
-Payment               VERIFIED
-```
-
-## Successful Transaction Example
-
-```text
-User Intent
-"Find and buy 2 ANC earbuds under ₹6,000"
-        ↓
-Buyer Agent
-Discovers products
-        ↓
-Product Selected
-AeroBuds Pro ×2
-        ↓
-Offer Applied
-WELCOME10
-        ↓
-Checkout
-₹5,307.88
-        ↓
-Policy
-APPROVED
-        ↓
-Spending Authority
-₹5,307.88 / ₹6,000
-VALIDATED
-        ↓
-Inventory
-RESERVED
-        ↓
-Razorpay
-ORDER CREATED
-        ↓
-Webhook
-VERIFIED
-        ↓
-Payment
-VERIFIED
-        ↓
-PURCHASE COMPLETE
-```
-
-## Safety Rejection Example
-
-A second flow demonstrates what happens when an autonomous agent exceeds its delegated authority.
-
-```text
-Spending Authority:    ₹5,000
-Attempted Purchase:    Above ₹5,000
-```
-
-Result:
-
-```text
-Policy                 APPROVED
-Spending Authority     REJECTED
-Inventory              NOT RESERVED
-Razorpay               NOT INVOKED
-Payment                NOT ATTEMPTED
-Money Moved            ₹0
-```
-
-This is one of the core safety guarantees of PayPilot AI.
+An agentic commerce demo that separates product discovery from checkout authority. FastAPI owns pricing and policy checks; a Next.js interface exposes purchases and checkout audit events.
+
+Built for the Razorpay AI Buildathon. This is a hackathon MVP, not a production payment platform.
+
+## Implemented boundaries
+
+| Concern | Implementation |
+| --- | --- |
+| Pricing | Products and offers are read from the database; totals are recomputed at checkout creation, update and completion |
+| Spending authority | Ed25519-signed mandates and merchant-side transaction/daily limits are checked before order creation |
+| Checkout retries | Existing checkout/order results are returned for matching retry paths |
+| Inventory | Stock is moved into a reservation before order creation; timeout and payment-failure paths release reservations |
+| Payments | Razorpay order creation uses mock mode without keys or the configured Razorpay integration with keys |
+| Completion | Signed `payment.captured` webhook handling updates checkout/order state; order creation alone is not payment completion |
+| Audit | Checkout events expose policy decisions, order creation, webhook handling and failures |
+
+These mechanisms describe the code paths, not production guarantees or proof under concurrent load.
 
 ## Architecture
 
-```text
-┌─────────────────────────┐
-│       Human User        │
-└────────────┬────────────┘
-             │
-             │ Intent
-             ▼
-┌─────────────────────────┐
-│       Buyer Agent       │
-│                         │
-│ Intent Understanding    │
-│ Product Discovery       │
-│ Product Selection       │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│      Merchant Agent     │
-│                         │
-│ Catalog                 │
-│ Offers                  │
-│ Checkout                │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│   Financial Boundary    │
-│                         │
-│ Policy Engine           │
-│ Mandate Validation      │
-│ Inventory Validation    │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│        Razorpay         │
-│                         │
-│ Order Creation          │
-│ Payment Execution       │
-│ Webhook Verification    │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│       Audit Ledger      │
-└─────────────────────────┘
+```mermaid
+flowchart TD
+    UI[Next.js interface] --> API[FastAPI routers]
+    Agent[Merchant agent orchestration] --> API
+    API --> Controls[Pricing and policy services]
+    API --> DB[(Catalog, checkouts and audit)]
+    Controls --> DB
+    API --> Payments[Razorpay order integration]
+    Payments -. signed webhook .-> Webhook[Webhook handler]
+    Webhook --> DB
 ```
 
-## Tech Stack
+Groq-backed orchestration is optional. Without a configured key and model, a deterministic catalog-search fallback supports local demos. The checkout engine derives prices from database records rather than LLM output.
 
-### Frontend
-- Next.js 15
-- React
-- TypeScript
-- Tailwind CSS
-
-### Backend
-- Python
-- FastAPI
-- SQLAlchemy
-- Alembic
-
-### Database
-- PostgreSQL
-
-### AI
-- Groq API
-- LLM-based agent orchestration
-- OpenAI-compatible Groq endpoint
-- Deterministic fallback where applicable
-
-### Payments
-- Razorpay Test Mode
-- Razorpay Orders
-- Payment verification
-- Webhook verification
-
-### Infrastructure
-- Docker
-- Docker Compose
-- Cloudflare Tunnel for webhook testing
-
-### Testing
-- Pytest
-- TypeScript type checking
-- Next.js production build
-- Frontend regression tests
-- Success and rejection transaction testing
-
-## Project Structure
-
-```text
-PayPilot-AI/
-│
-├── backend/
-│   ├── app/
-│   ├── tests/
-│   ├── scripts/
-│   └── ...
-│
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   ├── lib/
-│   └── ...
-│
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-## Running Locally
-
-### 1. Clone the repository
+## Run locally
 
 ```bash
 git clone https://github.com/mang-os/PayPilot-AI.git
-cd PayPilot-AI
+cd PayPilot-AI/razorpay-agentic-commerce
+cp .env.example .env
+# Review .env and configure the demo agent and optional external integrations.
+docker compose up --build
 ```
 
-### 2. Configure environment variables
+Compose starts PostgreSQL, runs backend migrations and demo seeding, and starts the FastAPI and Next.js services.
 
-Create a `.env` file using `.env.example`.
+- Interface: http://localhost:3000
+- Health: http://localhost:8000/health
+- Interactive API: http://localhost:8000/docs
 
-Example:
+Review `.env.example` for frontend agent credentials and backend integration settings. The frontend purchase path requires the configured demo agent identity. Keep secrets out of commits. Without Razorpay keys, order creation is mocked; webhook signature checking remains enabled. For provider testing, use Razorpay Test Mode credentials.
 
-```text
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
-RAZORPAY_WEBHOOK_SECRET=
+See the [application guide](razorpay-agentic-commerce/README.md) for non-Docker startup and scripted scenarios. That older guide contains historical validation statements; it is not a fresh verification report.
 
-GROQ_API_KEY=
-GROQ_AI_MODEL=
+## Tests and verification
 
-CURRENCY=INR
-TAX_RATE=0.18
-```
+Backend tests include authentication, server-derived pricing, policy rejection, duplicate checkout/completion paths, simulated timeout recovery and catalog-result constraints. Frontend regression tests cover transaction progress.
 
-Do not commit real API keys or secrets.
-
-### 3. Start the application
-
-```bash
-docker compose up -d
-```
-
-Check services:
-
-```bash
-docker compose ps
-```
-
-### 4. Verify backend health
-
-```bash
-curl http://localhost:8000/health
-```
-
-Expected:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-### 5. Open the frontend
-
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-
-## Build Validation
-
-Frontend type check:
-
-```bash
-cd frontend
-npx tsc --noEmit
-```
-
-Production build:
-
-```bash
-npm run build
-```
-
-Backend tests:
+From `razorpay-agentic-commerce/`:
 
 ```bash
 docker compose exec backend pytest
+cd frontend
+npm install
+npx tsc --noEmit
+node --test tests/transaction-progress.test.cjs
+npm run build
 ```
 
-## Demo Flow
+The frontend build requires access to its configured Google Fonts. No passing test count or benchmark result is asserted here. This repository currently has no GitHub Actions workflow or published GitHub release.
 
-### Successful Autonomous Purchase
+## Explore the implementation
 
-1. Open Buyer Commerce
-2. Enter: `Find and buy 2 ANC earbuds under ₹6,000`
-3. Buyer Agent discovers eligible products
-4. Buyer Agent selects a product
-5. Eligible offer is applied
-6. Cart and checkout are created
-7. Merchant policy is validated
-8. Spending authority is validated
-9. Inventory is reserved
-10. Razorpay is invoked
-11. Payment is verified
-12. Transaction is completed
-13. Audit Trail displays transaction evidence
+| Path | Purpose |
+| --- | --- |
+| [Checkout engine](razorpay-agentic-commerce/backend/app/services/checkout_engine.py) | Catalog-derived pricing, offers and totals |
+| [Policy engine](razorpay-agentic-commerce/backend/app/services/policy_engine.py) | Agent, mandate, spending and inventory checks |
+| [Mandate signatures](razorpay-agentic-commerce/backend/app/services/mandate_service.py) | Ed25519 signing and verification |
+| [Checkout router](razorpay-agentic-commerce/backend/app/routers/acp_checkouts.py) | Creation, updates, completion and timeout recovery |
+| [Webhook router](razorpay-agentic-commerce/backend/app/routers/webhooks.py) | Signature-gated payment event handling |
+| [Backend tests](razorpay-agentic-commerce/backend/tests) | API and orchestration regression tests |
+| [Frontend regression test](razorpay-agentic-commerce/frontend/tests/transaction-progress.test.cjs) | Transaction progress rendering rules |
+| [Demo recording guide](razorpay-agentic-commerce/scripts/demo-video/README.md) | Demo capture tooling |
 
-### Safety Rejection
+## Scope and limitations
 
-1. Use a spending authority of ₹5,000
-2. Attempt a purchase above ₹5,000
-3. Spending authority validation fails
-4. Transaction stops at Checks
-5. Inventory is not reserved
-6. Razorpay is not invoked
-7. Payment is not attempted
-8. ₹0 moves
+- Mock order creation does not move money. A configured Razorpay order is not a completed payment.
+- Webhook signatures are checked, but the handler does not explicitly compare captured amount/currency with expected checkout totals.
+- Checkout completion contains multiple database commits. Current code does not establish atomic, concurrency-safe inventory and mandate consumption across the full payment boundary.
+- Pricing uses floating-point conversions and a configurable flat tax rate; it is not a production accounting or GST implementation.
+- Demo key handling and operational/security configuration require review before deployment.
+- Existing docs contain historical local validation claims. A fresh PostgreSQL integration run, concurrency tests and hosted CI are needed before stronger guarantees are advertised.
 
-## Why PayPilot AI?
+## Documentation and release direction
 
-Most AI-commerce systems focus on:
+The application guide currently contains the detailed design narrative. See [architecture](docs/architecture.md), [payment boundaries](docs/payment-boundaries.md) and [verification](docs/verification.md) for source-grounded design and reproduction details. A benchmark report should only be added after reproducible workloads record environment, dataset, duration, latency percentiles, error categories and raw results.
 
-> Can an AI buy something?
-
-PayPilot AI focuses on:
-
-> Under what conditions should an AI be allowed to buy something?
-
-The system combines:
-
-```text
-AUTONOMY
-Buyer Agent ↔ Merchant Agent
-
-        +
-
-CONTROL
-Policy + Spending Authority + Inventory
-
-        +
-
-EXECUTION
-Razorpay
-
-        +
-
-PROOF
-Webhook Verification + Audit Trail
-```
-
-## Build Challenges
-
-The main challenge was making AI-to-AI buying safe.
-
-The AI needed to handle product discovery and checkout autonomously without being given unrestricted control over money.
-
-This was solved by separating AI reasoning from deterministic financial controls using:
-
-- Merchant policy validation
-- Delegated spending limits
-- Inventory validation
-- Razorpay execution
-- Webhook verification
-- Checkout-scoped audit evidence
-
-Another challenge was keeping the Buyer and Merchant interfaces synchronized around the exact same transaction. PayPilot uses checkout-specific transaction state so both views represent the same purchase.
-
-## Validation
-
-The project has been validated using:
-
-- TypeScript type checking
-- Next.js production build
-- Frontend regression tests
-- Successful checkout scenarios
-- Rejected checkout scenarios
-- Matching and no-match product searches
-- Responsive layouts at mobile and desktop widths
-
-The transaction progress UI is evidence-driven, and rejected financial controls stop the flow before Razorpay execution.
-
-## Screenshots
-
-Add your final screenshots here before submission.
-
-- Buyer Commerce: `docs/buyer-commerce.png`
-- Merchant Control: `docs/merchant-control.png`
-- Spending Authority Rejection: `docs/safety-rejection.png`
-
-Example Markdown after adding the images:
-
-```markdown
-![Buyer Commerce](docs/buyer-commerce.png)
-
-![Merchant Control](docs/merchant-control.png)
-
-![Safety Rejection](docs/safety-rejection.png)
-```
-
-## Current Scope
-
-PayPilot AI is a hackathon MVP demonstrating:
-
-- AI-to-AI commerce
-- Autonomous product discovery
-- Agent-based commerce orchestration
-- Deterministic payment controls
-- Delegated spending authority
-- Merchant policy validation
-- Inventory protection
-- Razorpay payment execution
-- Webhook verification
-- Checkout-scoped auditability
-- Safe transaction rejection
-
-The current implementation uses Razorpay Test Mode and is not intended for production financial use.
-
-## Hackathon
-
-Built for the Razorpay AI Buildathon 2026 under the AI Growth / Agentic Commerce track.
-
-## Repository
-
-https://github.com/mang-os/PayPilot-AI
-
-## Author
-
-Tarun K
-
-GitHub: https://github.com/mang-os
+[Releases](https://github.com/mang-os/PayPilot-AI/releases) will contain published versions when available. No stable release is currently claimed.
