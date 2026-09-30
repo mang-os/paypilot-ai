@@ -37,8 +37,8 @@ Groq-backed orchestration is optional. Without a configured key and model, a det
 ## Run locally
 
 ```bash
-git clone https://github.com/mang-os/PayPilot-AI.git
-cd PayPilot-AI/razorpay-agentic-commerce
+git clone https://github.com/mang-os/paypilot-ai.git
+cd paypilot-ai/razorpay-agentic-commerce
 cp .env.example .env
 # Review .env and configure the demo agent and optional external integrations.
 docker compose up --build
@@ -97,4 +97,4 @@ The frontend build requires access to its configured Google Fonts. No passing te
 
 The application guide currently contains the detailed design narrative. See [architecture](docs/architecture.md), [payment boundaries](docs/payment-boundaries.md) and [verification](docs/verification.md) for source-grounded design and reproduction details. A benchmark report should only be added after reproducible workloads record environment, dataset, duration, latency percentiles, error categories and raw results.
 
-[Releases](https://github.com/mang-os/PayPilot-AI/releases) will contain published versions when available. No stable release is currently claimed.
+[Releases](https://github.com/mang-os/paypilot-ai/releases) will contain published versions when available. No stable release is currently claimed.
